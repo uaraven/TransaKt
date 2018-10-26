@@ -14,8 +14,8 @@ class FileTxnStorage(val storageDir: Path) : TxnStorage {
     private val mapper = ObjectMapper().registerModule(KotlinModule())
     private val lock = ReentrantReadWriteLock()
 
-    override fun <L, R> append(txnId: UUID, progress: TxnStageProgress, stage: TxnStage<L, R>) {
-        val envelope = StageEnvelope(txnId, progress, stage)
+    override fun <L, R> append(index: Int, txnId: UUID, progress: TxnStageProgress, stage: TxnStage<L, R>) {
+        val envelope = StageEnvelope(index, txnId, progress, stage)
 
         val envelopeStr = mapper.writeValueAsString(envelope).replace("\n", "").replace("\r", "")
 
@@ -26,7 +26,8 @@ class FileTxnStorage(val storageDir: Path) : TxnStorage {
         }
     }
 
-    override fun <L, R> loadStages(txnId: UUID): List<TxnStage<L, R>> {
+    @Suppress("UNCHECKED_CAST")
+    override fun <L, R> loadStages(txnId: UUID): List<StoredStage<L, R>> {
         val envelopes = lock.read {
             FileInputStream(getFile(txnId)).bufferedReader().use {
                 it.readLines().map { line ->
@@ -34,9 +35,12 @@ class FileTxnStorage(val storageDir: Path) : TxnStorage {
                 }
             }
         }
-        return envelopes.filter { it.progress == TxnStageProgress.PostStage }.map {
-            it.stage as TxnStage<L, R>
-        }
+        return envelopes
+                .asSequence()
+                .sortedWith(kotlin.Comparator { e1, e2 -> e1.index.compareTo(e2.index)})
+                .filter { it.progress == TxnStageProgress.PostStage }.map {
+                    StoredStage(it.index, it.progress, it.stage as TxnStage<L, R>)
+                }.toList()
     }
 
     private fun getFile(txnId: UUID) = storageDir.resolve(txnId.toString()).toFile()
@@ -45,5 +49,5 @@ class FileTxnStorage(val storageDir: Path) : TxnStorage {
         getFile(txnId).delete()
     }
 
-    data class StageEnvelope<L, R>(val txnId: UUID, val progress: TxnStageProgress, val stage: TxnStage<L, R>)
+    data class StageEnvelope<L, R>(val index: Int, val txnId: UUID, val progress: TxnStageProgress, val stage: TxnStage<L, R>)
 }

@@ -26,6 +26,7 @@
 # All other IntelliJ stuff
 
 .idea/
+*.iml
 
 # CMake
 cmake-build-debug/
