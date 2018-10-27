@@ -28,7 +28,7 @@ interface TxnStorage {
 }
 
 @Suppress("UNCHECKED_CAST")
-class TxnManager<L, R>(private val storage: TxnStorage) {
+class Transaction<L, R>(private val storage: TxnStorage) {
     private val txnId = UUID.randomUUID()!!
 
     private val logger = LoggerFactory.getLogger("[txn-manager]")
@@ -61,7 +61,7 @@ class TxnManager<L, R>(private val storage: TxnStorage) {
         }
     }
 
-    fun begin(block: TxnManager<L, R>.() -> R): Either<L, R> {
+    fun begin(block: Transaction<L, R>.() -> R): Either<L, R> {
         if (stageIndex.get() != 0) {
             throw java.lang.IllegalStateException("Cannot start another transaction")
         }

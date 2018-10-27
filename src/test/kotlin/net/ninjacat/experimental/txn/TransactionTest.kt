@@ -3,13 +3,13 @@ package net.ninjacat.experimental.txn
 import arrow.core.Either
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.equalTo
-import org.junit.Assert.*
+import org.junit.Assert.assertThat
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
-import java.lang.IllegalStateException
 import java.util.concurrent.atomic.AtomicInteger
 
-class TxnManagerTest {
+class TransactionTest {
 
     private lateinit var storage: MemTxnStorage
 
@@ -20,7 +20,7 @@ class TxnManagerTest {
 
     @Test
     fun whenStageFails_thenRollback() {
-        val manager = TxnManager<Throwable, Int>(storage)
+        val manager = Transaction<Throwable, Int>(storage)
         val value = AtomicInteger(0)
         val result = manager.begin {
             execute(Add1(value))
@@ -35,7 +35,7 @@ class TxnManagerTest {
 
     @Test
     fun whenAllStagesPass_thenCommit() {
-        val manager = TxnManager<Throwable, Int>(storage)
+        val manager = Transaction<Throwable, Int>(storage)
         val value = AtomicInteger(0)
         val result = manager.begin {
             execute(Add1(value))
