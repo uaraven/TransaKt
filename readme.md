@@ -8,7 +8,7 @@ TransaKt is highly opinionated and, in general, just an experiment, not proven b
 Intended usage is to combine several changes executed in different independent services into one atomic transaction 
 with ability to rollback* already performed actions in the event of failure.
 
-* Rollback in this document means execution of another action which can compensate/neutralize previous action.
+\*Rollback in this document means execution of another action which can compensate/neutralize previous action.
 
 ## Usage
 
