@@ -1,7 +1,7 @@
-package net.ninjacat.experimental.txn
+package net.ninjacat.transakt
 
-import net.ninjacat.experimental.txn.storage.FileTxnStorage
-import net.ninjacat.experimental.txn.storage.StoredStage
+import net.ninjacat.transakt.storage.FileTransactionStorage
+import net.ninjacat.transakt.storage.TransactionLog
 import org.hamcrest.Matchers.*
 import org.junit.After
 import org.junit.Assert.assertThat
@@ -16,12 +16,14 @@ import java.util.*
 class TransactionFileTest {
 
     private lateinit var txnDir: Path
-    private lateinit var storage: FileTxnStorage
+    private lateinit var storage: FileTransactionStorage
 
     @Before
     fun setUp() {
         txnDir = Files.createTempDirectory("txn-test")
-        storage = FileTxnStorage(txnDir)
+        storage = FileTransactionStorage.build {
+            storageDir = txnDir
+        }
     }
 
     @After
@@ -29,7 +31,7 @@ class TransactionFileTest {
         Files.walk(txnDir)
                 .sorted(Comparator.reverseOrder())
                 .map(Path::toFile)
-                .forEach { file -> file.delete() };
+                .forEach { file -> file.delete() }
     }
 
     @Test
@@ -72,7 +74,7 @@ class TransactionFileTest {
     fun whenStageFailsAndRollBackFails_thenTransactionlogShouldPersist() {
         val manager = Transaction<Throwable, Int>(storage)
         try {
-            manager.begin {
+            val result = manager.begin {
                 testValue = 0
                 testValue = execute(Add1(testValue))
                 testValue = execute(Add2FailRb(testValue))
@@ -80,13 +82,15 @@ class TransactionFileTest {
                 testValue = execute(Add3(testValue))
                 testValue
             }
-        } catch (ignored: TxnRollbackException) {
 
+            assertThat(result.hasRollbackFailed(), `is`(true))
+        } catch (ignored: Transaction.TxnRollbackException) {
+            fail("Rollback should not throw exceptions")
         }
         assertThat(testValue, `is`(not(0)))
 
-        val storedTransactions: Map<UUID, List<StoredStage<Throwable, Int>>> = storage.listAllStoredTransactions()
-        assertThat(storedTransactions.size, `is`(1))
+        val storedTransactions: List<TransactionLog<Throwable, Int>> = storage.listAllStoredTransactions()
+        assertThat(storedTransactions, hasSize(1))
     }
 
     @Test
@@ -99,9 +103,12 @@ class TransactionFileTest {
         }
 
         val manager = Transaction<Throwable, Int>(storage)
-        testValue = 3;
+        testValue = 3
 
-        manager.rollbackAllPendingTransactions { fail("Should not fail") }
+        manager.rollbackAllPendingTransactions { thr, _ ->
+            fail("Should not fail")
+            throw thr
+        }
 
         assertThat(testValue, `is`(0))
     }

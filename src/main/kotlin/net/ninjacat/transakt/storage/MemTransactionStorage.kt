@@ -1,12 +1,11 @@
-package net.ninjacat.experimental.txn.storage
+package net.ninjacat.transakt.storage
 
-import net.ninjacat.experimental.txn.TxnStage
-import net.ninjacat.experimental.txn.TxnStageProgress
+import net.ninjacat.transakt.TxnStage
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 
-class MemTxnStorage() : TxnStorage {
+class MemTransactionStorage() : TransactionStorage {
     data class TxnKey(val txnId: UUID, val index: Int)
     private val store: ConcurrentMap<TxnKey, List<StageEnvelope<*, *>>> = ConcurrentHashMap()
 
@@ -41,8 +40,8 @@ class MemTxnStorage() : TxnStorage {
         }
     }
 
-    override fun <L, R> listAllStoredTransactions(): Map<UUID, List<StoredStage<L, R>>> {
-        return mapOf()
+    override fun <L, R> listAllStoredTransactions(): List<TransactionLog<L, R>> {
+        return listOf()
     }
 
     data class StageEnvelope<L, R>(val index: Int, val txnId: UUID, val progress: TxnStageProgress, val stage: TxnStage<L, R>)

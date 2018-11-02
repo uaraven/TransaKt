@@ -1,8 +1,7 @@
-package net.ninjacat.experimental.txn.storage
+package net.ninjacat.transakt.storage
 
-import net.ninjacat.experimental.txn.Result
-import net.ninjacat.experimental.txn.TxnStage
-import net.ninjacat.experimental.txn.TxnStageProgress
+import net.ninjacat.transakt.Result
+import net.ninjacat.transakt.TxnStage
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.equalTo
@@ -14,15 +13,15 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
 
-class FileTxnStorageTest {
+class FileTransactionStorageTest {
 
     private lateinit var txnDir: Path
-    private lateinit var txnStorage: FileTxnStorage
+    private lateinit var txnStorage: FileTransactionStorage
 
     @Before
     fun setUp() {
         txnDir = Files.createTempDirectory("txn-test")
-        txnStorage = FileTxnStorage(txnDir)
+        txnStorage = FileTransactionStorage(txnDir, JsonSerializer())
     }
 
     @After
@@ -30,7 +29,7 @@ class FileTxnStorageTest {
         Files.walk(txnDir)
                 .sorted(Comparator.reverseOrder())
                 .map(Path::toFile)
-                .forEach { file -> file.delete() };
+                .forEach { file -> file.delete() }
     }
 
     @Test
@@ -75,7 +74,7 @@ class FileTxnStorageTest {
         originalStages.add(txnStorage.append(1, txnId, TxnStageProgress.PostStage, IncStage(1)))
         originalStages.add(txnStorage.append(2, txnId, TxnStageProgress.PreStage, IncStage(2)))
         originalStages.add(txnStorage.append(2, txnId, TxnStageProgress.PostStage, IncStage(3)))
-        txnStorage.appendTxnState(2, txnId, StoredStageProgress.Removed, IncStage(3))
+        txnStorage.appendTxnState(2, txnId, StoredStageProgress.Removed, JsonSerializer().serialize(IncStage(3)))
 
         val nonRolledBackOriginalStages = originalStages.filter { stage -> stage.index == 1 }
         val stages: List<StoredStage<String, Int>> = txnStorage.loadStages(txnId)
