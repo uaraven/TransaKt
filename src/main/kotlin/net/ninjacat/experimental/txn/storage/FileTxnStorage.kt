@@ -7,11 +7,13 @@ import net.ninjacat.experimental.txn.TxnStage
 import net.ninjacat.experimental.txn.TxnStageProgress
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
+import kotlin.streams.asSequence
 
 internal enum class StoredStageProgress {
     PreStage,
@@ -89,6 +91,14 @@ class FileTxnStorage(private val storageDir: Path) : TxnStorage {
                     StoredStage(it.txnId, it.index, it.progress.toTxnStage(), it.stage as TxnStage<L, R>)
                 }
                 .toList()
+    }
+
+    override fun <L, R> listAllStoredTransactions(): Map<UUID, List<StoredStage<L, R>>> {
+        return Files.list(storageDir)
+                .asSequence()
+                .map { file -> UUID.fromString(file.fileName.toString()) }
+                .map { txnId -> Pair(txnId, loadStages<L, R>(txnId)) }
+                .toMap()
     }
 
     private fun getFile(txnId: UUID, suffix: String = "") = storageDir.resolve(txnId.toString() + suffix).toFile()

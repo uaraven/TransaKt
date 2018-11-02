@@ -41,6 +41,9 @@ class MemTxnStorage() : TxnStorage {
         }
     }
 
+    override fun <L, R> listAllStoredTransactions(): Map<UUID, List<StoredStage<L, R>>> {
+        return mapOf()
+    }
 
     data class StageEnvelope<L, R>(val index: Int, val txnId: UUID, val progress: TxnStageProgress, val stage: TxnStage<L, R>)
 }

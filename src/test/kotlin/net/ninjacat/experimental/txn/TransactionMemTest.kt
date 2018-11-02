@@ -9,7 +9,7 @@ import org.junit.Before
 import org.junit.Test
 import java.util.concurrent.atomic.AtomicInteger
 
-class TransactionTest {
+class TransactionMemTest {
 
     private lateinit var storage: MemTxnStorage
 

@@ -6,6 +6,7 @@ import net.ninjacat.experimental.txn.TxnStageProgress
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.equalTo
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import java.io.FileInputStream
@@ -22,6 +23,14 @@ class FileTxnStorageTest {
     fun setUp() {
         txnDir = Files.createTempDirectory("txn-test")
         txnStorage = FileTxnStorage(txnDir)
+    }
+
+    @After
+    fun tearDown() {
+        Files.walk(txnDir)
+                .sorted(Comparator.reverseOrder())
+                .map(Path::toFile)
+                .forEach { file -> file.delete() };
     }
 
     @Test
@@ -76,7 +85,6 @@ class FileTxnStorageTest {
             assertThat(stage, equalTo(originalStage))
         }
     }
-
 
     private fun readTxnFileContents(txnId: UUID): List<String> {
         FileInputStream(this.txnDir.resolve(txnId.toString()).toFile()).bufferedReader().useLines {

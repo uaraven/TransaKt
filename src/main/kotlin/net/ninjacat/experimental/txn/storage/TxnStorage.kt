@@ -15,4 +15,5 @@ interface TxnStorage {
     fun <L, R> loadStages(txnId: UUID): List<StoredStage<L, R>>
     fun <L, R> remove(storedStage: StoredStage<L, R>)
     fun clear(txnId: UUID)
+    fun <L, R> listAllStoredTransactions(): Map<UUID, List<StoredStage<L, R>>>
 }

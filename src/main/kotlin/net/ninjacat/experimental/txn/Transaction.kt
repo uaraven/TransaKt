@@ -1,5 +1,6 @@
 package net.ninjacat.experimental.txn
 
+import net.ninjacat.experimental.txn.storage.StoredStage
 import net.ninjacat.experimental.txn.storage.TxnStorage
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -22,7 +23,6 @@ class TransactionResult<F, S> internal constructor(private val txn: Transaction<
     operator fun invoke(): Result<F, S> = result
 }
 
-@Suppress("UNCHECKED_CAST")
 class Transaction<L, R>(private val storage: TxnStorage) {
     private val txnId = UUID.randomUUID()!!
 
@@ -45,22 +45,26 @@ class Transaction<L, R>(private val storage: TxnStorage) {
         })
     }
 
-    private fun rollback() {
-        logger.debug("txn[{}] Rolling back", txnId)
-        val stages = storage.loadStages<L, R>(txnId).groupBy { stage -> stage.index }
-
-        stages.keys.sorted().forEach {
+    private fun <L, R> rollbackStages(txnId: UUID, stageList: List<StoredStage<L, R>>) {
+        val stages = stageList.groupBy { stage -> stage.index }
+        stages.keys.sorted().reversed().forEach {
             val stageStateGroup = stages[it]!!.groupBy { stage -> stage.stageProgress }
-            val storedStage = stageStateGroup[TxnStageProgress.PostStage]?.first()!!
+            val storedStage = Optional.ofNullable(stageStateGroup[TxnStageProgress.PostStage]?.first())
             try {
-                storedStage.stage.compensate()
-                storage.remove(storedStage)
+                storedStage.ifPresent { st ->
+                    st.stage.compensate()
+                    storage.remove(st)
+                }
             } catch (ex: Exception) {
-                throw TxnRollbackException(storedStage.stage, ex)
+                throw TxnRollbackException(storedStage.map { it.stage }.get(), ex)
             }
         }
-
         storage.clear(txnId)
+    }
+
+    private fun rollback() {
+        logger.debug("txn[{}] Rolling back", txnId)
+        rollbackStages(txnId, storage.loadStages<L, R>(txnId))
     }
 
     /**
@@ -81,9 +85,27 @@ class Transaction<L, R>(private val storage: TxnStorage) {
             logger.debug("txn[{}] Transaction failed", txnId)
             rollback()
             logger.debug("txn[{}] Transaction rolled back", txnId)
+            @Suppress("UNCHECKED_CAST")
             when (txnEx) {
                 is TxnFailedException -> TransactionResult(this, Result.failure(txnEx.causeLeft as L))
                 else -> throw IllegalStateException("Unexpected exception, no exception should be thrown by Transaction Stage", txnEx)
+            }
+        }
+    }
+
+    /**
+     * Helper method which will go through all non-committed transactions and attempt to roll them back.
+     *
+     * If any of the roll backs fails again you can decide what to do in `onFailure` handler
+     */
+    fun rollbackAllPendingTransactions(onFailure: Transaction<L, R>.(stage: TxnStage<L, R>) -> Unit) {
+        val txnMap: Map<UUID, List<StoredStage<L, R>>> = storage.listAllStoredTransactions()
+        txnMap.forEach { (txnId, storedStage) ->
+            try {
+                rollbackStages(txnId, storedStage)
+            } catch (ex: TxnRollbackException) {
+                @Suppress("UNCHECKED_CAST")
+                onFailure(this, ex.stage as TxnStage<L, R>)
             }
         }
     }
