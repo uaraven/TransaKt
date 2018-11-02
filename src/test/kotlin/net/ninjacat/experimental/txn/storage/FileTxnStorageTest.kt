@@ -1,6 +1,5 @@
 package net.ninjacat.experimental.txn.storage
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo
 import net.ninjacat.experimental.txn.Result
 import net.ninjacat.experimental.txn.TxnStage
 import net.ninjacat.experimental.txn.TxnStageProgress
@@ -57,6 +56,27 @@ class FileTxnStorageTest {
             assertThat(stage, equalTo(originalStage))
         }
     }
+
+    @Test
+    fun shouldSkipLoadingOfRolledBackStages() {
+        val txnId = UUID.randomUUID()
+        val originalStages = mutableListOf<StoredStage<String, Int>>()
+
+        originalStages.add(txnStorage.append(1, txnId, TxnStageProgress.PreStage, IncStage(0)))
+        originalStages.add(txnStorage.append(1, txnId, TxnStageProgress.PostStage, IncStage(1)))
+        originalStages.add(txnStorage.append(2, txnId, TxnStageProgress.PreStage, IncStage(2)))
+        originalStages.add(txnStorage.append(2, txnId, TxnStageProgress.PostStage, IncStage(3)))
+        txnStorage.appendTxnState(2, txnId, StoredStageProgress.Removed, IncStage(3))
+
+        val nonRolledBackOriginalStages = originalStages.filter { stage -> stage.index == 1 }
+        val stages: List<StoredStage<String, Int>> = txnStorage.loadStages(txnId)
+
+        assertThat(stages.size, equalTo(nonRolledBackOriginalStages.size))
+        stages.zip(nonRolledBackOriginalStages).forEach { (stage, originalStage) ->
+            assertThat(stage, equalTo(originalStage))
+        }
+    }
+
 
     private fun readTxnFileContents(txnId: UUID): List<String> {
         FileInputStream(this.txnDir.resolve(txnId.toString()).toFile()).bufferedReader().useLines {

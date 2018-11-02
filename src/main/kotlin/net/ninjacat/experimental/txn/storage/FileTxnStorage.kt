@@ -1,5 +1,6 @@
 package net.ninjacat.experimental.txn.storage
 
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import net.ninjacat.experimental.txn.TxnStage
@@ -34,6 +35,8 @@ internal enum class StoredStageProgress {
 class FileTxnStorage(private val storageDir: Path) : TxnStorage {
     private val mapper = ObjectMapper()
             .registerModule(KotlinModule())
+            .enableDefaultTyping()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
     private val lock = ReentrantReadWriteLock()
 
@@ -41,7 +44,7 @@ class FileTxnStorage(private val storageDir: Path) : TxnStorage {
             .replace("\n", "")
             .replace("\r", "")
 
-    private fun <L, R> appendTxnState(index: Int, txnId: UUID, progress: StoredStageProgress, stage: TxnStage<L, R>) {
+    internal fun <L, R> appendTxnState(index: Int, txnId: UUID, progress: StoredStageProgress, stage: TxnStage<L, R>) {
         val envelope = StageEnvelope(index, txnId, progress, stage)
 
         lock.write {
@@ -64,7 +67,6 @@ class FileTxnStorage(private val storageDir: Path) : TxnStorage {
         appendTxnState(storedStage.index, storedStage.txnId, StoredStageProgress.Removed, storedStage.stage)
     }
 
-    @Suppress("UNCHECKED_CAST")
     override fun <L, R> loadStages(txnId: UUID): List<StoredStage<L, R>> {
         val envelopes = lock.read {
             FileInputStream(getFile(txnId)).bufferedReader().use {
@@ -73,12 +75,19 @@ class FileTxnStorage(private val storageDir: Path) : TxnStorage {
                 }
             }
         }
-        return envelopes.asSequence()
-                .groupBy { it.txnId } // group all stages of the same transaction
-                .filter { entry -> entry.value.groupBy { it.index }.none { it.value.any { stage -> stage.progress == StoredStageProgress.Removed } } }
+        val filteredEntries = envelopes.asSequence()
+                .groupBy { it.index } // group all stages of the same transaction
+                .filter { entry ->
+                    entry.value.none { stage -> stage.progress == StoredStageProgress.Removed }
+                }
+
+        return filteredEntries
                 .flatMap { entry -> entry.value }
                 .sortedWith(kotlin.Comparator { e1, e2 -> e1.index.compareTo(e2.index) })
-                .map { StoredStage(it.txnId, it.index, it.progress.toTxnStage(), it.stage as TxnStage<L, R>) }
+                .map {
+                    @Suppress("UNCHECKED_CAST")
+                    StoredStage(it.txnId, it.index, it.progress.toTxnStage(), it.stage as TxnStage<L, R>)
+                }
                 .toList()
     }
 
