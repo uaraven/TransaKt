@@ -2,30 +2,30 @@
 
 ## Description
 
-Experiment on creating transaction manager for handling distributed transaction in Saga orchestrator written in Kotlin.
-TransaKt is highly opinionated and, in general, just an experiment, not proven by any production deployment.
+Experiment on creating transaction manager for handling distributed(?) transactions written in Kotlin.
+TransaKt is highly opinionated and, and beware, just an experiment, not proven by any production deployment.
 
-Intended usage is to combine several changes executed in different independent services into one atomic transaction 
+Intended usage is to combine several changes to independent services into one atomic transaction 
 with ability to rollback* already performed actions in the event of failure.
 
-\*Rollback in this document means execution of another action which can compensate/neutralize previous action.
+\*Rollback in this document means execution of another action which can compensate/cancel out previous action.
 
 ## Usage
 
 Firstly, set up transaction log storage. TransaKt comes with file-based and memory-based storages built in.
 Do not use memory based storage for anything but tests.
 
-Secondly, create a new transaction and begin it with `.begin` method.  
+Secondly, create a new transaction and begin it with `begin` method.  
 
 Each transaction consists of stages. Stage is a unit of execution that modifies state of an external component and 
-can be rolled back. Transaction manager writes transaction log entry after every successful stage execution.  
+can be rolled back. Transaction manager writes transaction log entry after every successful stage execution, before moving on.  
 
 Each stage must implement `TxnStage` interface and result in either success of failure, represented 
 by `Result<F, S>` type. `Result` type is an implementation of `Either` monad and has two possible values - 
 `Result.Success` and `Result.Failure`.
 
 If stage returns `Result.Failure` then transaction will terminate and will attempt to roll back all previously completed
-stages.
+stages. Stage must never throw exceptions, all failures must be represented as `Result.Failure`.
 
 When running in the context of transaction (inside begin block) stages can be executed with `execute(TxnStage<L, R>)` method. 
 `execute` will unwrap result of successful stage allowing to write transaction logic in simple imperative style.
