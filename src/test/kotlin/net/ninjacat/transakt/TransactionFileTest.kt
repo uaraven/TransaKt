@@ -11,6 +11,7 @@ import org.junit.Test
 import java.io.FileOutputStream
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.*
 
 class TransactionFileTest {
@@ -20,7 +21,7 @@ class TransactionFileTest {
 
     @Before
     fun setUp() {
-        txnDir = Files.createTempDirectory("txn-test")
+        txnDir = Files.createDirectory(Paths.get("txn-test"))
         storage = FileTransactionStorage.build {
             storageDir = txnDir
         }
@@ -96,7 +97,7 @@ class TransactionFileTest {
     @Test
     fun whenThereArePendingTransactions_thenRollThemBack() {
         val txnId = UUID.randomUUID()
-        javaClass.getResourceAsStream("/txn.log").use { src ->
+        javaClass.getResourceAsStream("/txn.txt").use { src ->
             FileOutputStream(txnDir.resolve(txnId.toString()).toFile()).use { dst ->
                 src.copyTo(dst)
             }

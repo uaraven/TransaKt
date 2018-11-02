@@ -1,0 +1,5 @@
+{"index":1,"txnId":"b917d0ec-1f64-4a84-8a4e-e6f229c1cb45","progress":"PreStage","stage":"{\"stage\":[\"net.ninjacat.transakt.TransactionFileTest$Add1\",{\"value\":0,\"name\":\"add1\"}]}"}
+{"index":1,"txnId":"b917d0ec-1f64-4a84-8a4e-e6f229c1cb45","progress":"PostStage","stage":"{\"stage\":[\"net.ninjacat.transakt.TransactionFileTest$Add1\",{\"value\":0,\"name\":\"add1\"}]}"}
+{"index":2,"txnId":"b917d0ec-1f64-4a84-8a4e-e6f229c1cb45","progress":"PreStage","stage":"{\"stage\":[\"net.ninjacat.transakt.TransactionFileTest$Add2\",{\"value\":1,\"name\":\"add2\"}]}"}
+{"index":2,"txnId":"b917d0ec-1f64-4a84-8a4e-e6f229c1cb45","progress":"PostStage","stage":"{\"stage\":[\"net.ninjacat.transakt.TransactionFileTest$Add2\",{\"value\":1,\"name\":\"add2\"}]}"}
+{"index":3,"txnId":"b917d0ec-1f64-4a84-8a4e-e6f229c1cb45","progress":"PreStage","stage":"{\"stage\":[\"net.ninjacat.transakt.TransactionFileTest$Fail\",{\"value\":3,\"name\":\"failure\"}]}"}
