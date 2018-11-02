@@ -69,8 +69,7 @@ class FileTxnStorageTest {
             return it.toList()
         }
     }
-9
-    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.WRAPPER_OBJECT)
+
     private data class IncStage(val counter: Int) : TxnStage<String, Int> {
         override fun apply(): Result<String, Int> {
             return Result.success(counter + 1)
