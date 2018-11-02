@@ -1,6 +1,5 @@
 package net.ninjacat.experimental.txn
 
-import arrow.core.Either
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.equalTo
 import org.junit.Assert.assertThat
@@ -30,7 +29,7 @@ class TransactionTest {
         }
 
         assertThat(value.get(), `is`(0))
-        assertThat(result.isLeft(), `is`(true))
+        assertThat(result().isFailure, `is`(true))
     }
 
     @Test
@@ -44,8 +43,8 @@ class TransactionTest {
         }
 
         assertThat(value.get(), `is`(6))
-        assertThat(result.isRight(), `is`(true))
-        result.fold({
+        assertThat(result().isSuccess, `is`(true))
+        result().fold({
             fail("Expected to succeed")
         }) { outcome ->
             assertThat(outcome, equalTo(value.get()))
@@ -59,8 +58,8 @@ class TransactionTest {
             value.decrementAndGet()
         }
 
-        override fun apply(): Either<Throwable, Int> {
-            return Either.right(value.incrementAndGet())
+        override fun apply(): Result<Throwable, Int> {
+            return Result.success(value.incrementAndGet())
         }
     }
 
@@ -71,8 +70,8 @@ class TransactionTest {
             value.addAndGet(-2)
         }
 
-        override fun apply(): Either<Throwable, Int> {
-            return Either.right(value.addAndGet(2))
+        override fun apply(): Result<Throwable, Int> {
+            return Result.success(value.addAndGet(2))
         }
     }
 
@@ -83,8 +82,8 @@ class TransactionTest {
             value.addAndGet(-3)
         }
 
-        override fun apply(): Either<Throwable, Int> {
-            return Either.right(value.addAndGet(3))
+        override fun apply(): Result<Throwable, Int> {
+            return Result.success(value.addAndGet(3))
         }
     }
 
@@ -94,8 +93,8 @@ class TransactionTest {
         override fun compensate() {
         }
 
-        override fun apply(): Either<Throwable, Int> {
-            return Either.left(IllegalStateException())
+        override fun apply(): Result<Throwable, Int> {
+            return Result.failure(IllegalStateException())
         }
     }
 }
