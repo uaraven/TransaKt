@@ -1,5 +1,6 @@
 package net.ninjacat.experimental.txn
 
+import net.ninjacat.experimental.txn.storage.MemTxnStorage
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.equalTo
 import org.junit.Assert.assertThat

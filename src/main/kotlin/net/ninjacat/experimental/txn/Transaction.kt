@@ -1,74 +1,15 @@
 package net.ninjacat.experimental.txn
 
+import net.ninjacat.experimental.txn.storage.TxnStorage
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
-sealed class Result<out F, out S> {
-    internal abstract val isSuccess: Boolean
-    internal abstract val isFailure: Boolean
-    fun isSuccess() = isSuccess
-    fun isFailure() = isFailure
-
-    fun <T> fold(onFailure: (failure: F) -> T, onSuccess: (success: S) -> T): T = when (this) {
-        is Success -> onSuccess(value)
-        is Failure -> onFailure(value)
-    }
-
-    fun <T> flatMap(map: (success: S) -> T): Result<F, T> = when (this) {
-        is Success -> Success(map(value))
-        is Failure -> this
-    }
-
-    fun <T> onFailure(onFailure: (failure: F) -> T): Result<T, S> = when (this) {
-        is Failure -> Failure(onFailure(value))
-        is Success -> this
-    }
-
-    data class Success<out S> internal constructor(val value: S) : Result<Nothing, S>() {
-        override val isSuccess
-            get() = true
-        override val isFailure
-            get() = false
-    }
-
-    data class Failure<F> internal constructor(val value: F) : Result<F, Nothing>() {
-        override val isSuccess
-            get() = false
-        override val isFailure
-            get() = true
-    }
-
-    companion object {
-        fun <F> failure(value: F) = Failure(value)
-        fun <S> success(value: S) = Success(value)
-    }
-}
-
-
-interface TxnStage<L, R> {
-    fun getName(): String = javaClass.name
-    fun apply(): Result<L, R>
-    fun compensate()
-}
-
-class TxnStorageException(override val message: String) : RuntimeException(message)
 class TxnRollbackException(val stage: TxnStage<*, *>, override val cause: Throwable) : RuntimeException(cause)
 
 enum class TxnStageProgress {
     PreStage,
     PostStage
-}
-
-data class StoredStage<L, R>(val txnId:UUID, val index: Int, val stageProgress: TxnStageProgress, val stage: TxnStage<L, R>)
-
-interface TxnStorage {
-    @Throws(TxnStorageException::class)
-    fun <L, R> append(index: Int, txnId: UUID, progress: TxnStageProgress, stage: TxnStage<L, R>)
-
-    fun <L, R> loadStages(txnId: UUID): List<StoredStage<L, R>>
-    fun <L, R> remove(storedStage: StoredStage<L, R>)
-    fun clear(txnId: UUID)
 }
 
 class TransactionResult<F, S> internal constructor(private val txn: Transaction<F, S>, private val result: Result<F, S>) {

@@ -1,5 +1,7 @@
-package net.ninjacat.experimental.txn
+package net.ninjacat.experimental.txn.storage
 
+import net.ninjacat.experimental.txn.TxnStage
+import net.ninjacat.experimental.txn.TxnStageProgress
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
@@ -8,11 +10,12 @@ class MemTxnStorage() : TxnStorage {
     data class TxnKey(val txnId: UUID, val index: Int)
     private val store: ConcurrentMap<TxnKey, List<StageEnvelope<*, *>>> = ConcurrentHashMap()
 
-    override fun <L, R> append(index: Int, txnId: UUID, progress: TxnStageProgress, stage: TxnStage<L, R>) {
+    override fun <L, R> append(index: Int, txnId: UUID, progress: TxnStageProgress, stage: TxnStage<L, R>): StoredStage<L, R> {
         val envelope = StageEnvelope(index, txnId, progress, stage)
-        store.merge(TxnKey(txnId, index) , listOf(envelope)) { e1, e2 ->
+        store.merge(TxnKey(txnId, index), listOf(envelope)) { e1, e2 ->
             e1 + e2
         }
+        return StoredStage(txnId, index, progress, stage)
     }
 
     @Suppress("UNCHECKED_CAST")
