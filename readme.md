@@ -1,5 +1,8 @@
 # TransaKt
 
+[![Build Status](https://travis-ci.org/uaraven/TransaKt.svg?branch=master)](https://travis-ci.org/uaraven/TransaKt)
+[![Coverage Status](https://coveralls.io/repos/github/uaraven/TransaKt/badge.svg?branch=coveralls-integration)](https://coveralls.io/github/uaraven/TransaKt?branch=coveralls-integration)
+
 ## Description
 
 Experiment on creating transaction manager for handling distributed(?) transactions written in Kotlin.
