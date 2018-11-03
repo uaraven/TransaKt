@@ -11,7 +11,6 @@ import org.junit.Test
 import java.io.FileOutputStream
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.*
 
 class TransactionFileTest {
@@ -21,7 +20,7 @@ class TransactionFileTest {
 
     @Before
     fun setUp() {
-        txnDir = Files.createDirectory(Paths.get("txn-test"))
+        txnDir = Files.createTempDirectory("txn-test")
         storage = FileTransactionStorage.build {
             storageDir = txnDir
         }
