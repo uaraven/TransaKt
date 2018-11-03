@@ -58,3 +58,7 @@ test {
         exceptionFormat = 'full'
     }
 }
+
+coveralls {
+    sourceDirs = files(sourceSets.main.kotlin.srcDirs).files.absolutePath
+}
