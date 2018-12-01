@@ -185,6 +185,6 @@ class Transaction<F, S>(private val storage: TransactionStorage) {
         }
     }
 
-    internal class TxnRollbackException(val stage: TxnStage<*, *>, override val cause: Throwable) : RuntimeException(cause)
+    class TxnRollbackException(val stage: TxnStage<*, *>, override val cause: Throwable) : RuntimeException(cause)
     private class TxnFailedException(val causeLeft: Any) : Exception()
 }

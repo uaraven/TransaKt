@@ -46,7 +46,7 @@ class TransactionFileTest {
         }
 
         assertThat(testValue, `is`(6))
-        assertThat(result().isSuccess, `is`(true))
+        assertThat(result().isSuccess(), `is`(true))
         result().fold({
             fail("Expected to succeed")
         }) { outcome ->
@@ -67,7 +67,7 @@ class TransactionFileTest {
         }
 
         assertThat(testValue, `is`(0))
-        assertThat(result().isFailure, `is`(true))
+        assertThat(result().isFailure(), `is`(true))
     }
 
     @Test

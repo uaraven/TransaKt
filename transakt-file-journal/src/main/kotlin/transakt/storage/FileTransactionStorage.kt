@@ -159,8 +159,8 @@ class FileTransactionStorage(private val storageDir: Path, private val serialize
 
     class Builder {
         var storageDir: Path? = null
-        var serializer: StageSerializer<String>? = JsonSerializer()
-        var alwaysSync: Boolean = false
+        private var serializer: StageSerializer<String>? = JsonSerializer()
+        private var alwaysSync: Boolean = false
 
         fun build() = FileTransactionStorage(storageDir!!, serializer!!, alwaysSync)
     }
