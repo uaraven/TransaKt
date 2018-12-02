@@ -15,10 +15,13 @@ with ability to rollback* already performed actions in the event of failure.
 
 ## Usage
 
-Firstly, set up transaction log storage. TransaKt comes with file-based and memory-based storages built in.
-Do not use memory based storage for anything but tests.
+Firstly, set up transaction log storage. TransaKt comes with memory-based, file-based and springboot-data-based storage 
+built in. 
 
-Secondly, create a new transaction and begin it with `begin` method.  
+In-memory storage is only intended for usage with unit-tests.
+Spring-based uses spring-data CrudRepository to store transaction journal in database. See unit tests for more details.
+
+Then, create a new transaction and begin it with `begin` method.  
 
 Each transaction consists of stages. Stage is a unit of execution that modifies state of an external component and 
 can be rolled back. Transaction manager writes transaction log entry after every successful stage execution, before moving on.  
@@ -35,6 +38,9 @@ When running in the context of transaction (inside begin block) stages can be ex
 
 ```kotlin
     val txnLogStorage = FileTxnStorage(Paths.get("/var/txn/")) // file-based transaction log
+    // or 
+    // @Autowired val txnLogStorage: SpringJpaRepositoryStorage
+    
     val txn = Transaction(txnLogStorage)
     
     val completedTxn = txn.begin { // starts transaction
