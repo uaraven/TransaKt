@@ -1,0 +1,23 @@
+buildscript {
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-noarg:$kotlin_version"
+    }
+}
+
+apply plugin: "kotlin-jpa"
+apply plugin: "kotlin-noarg"
+
+ext.jacksonVersion = '2.9.7'
+ext.springBootVersion = '2.1.1.RELEASE'
+
+dependencies {
+    compile("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+    compile("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
+
+    compile("org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion")
+    compile project(':transakt-core')
+
+    testCompile("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
+    testCompile('com.h2database:h2:1.4.197')
+}
+

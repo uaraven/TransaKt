@@ -1,37 +1,37 @@
-package net.ninjacat.transakt
+package net.ninjacat.transakt.storage
 
-import net.ninjacat.transakt.storage.FileTransactionStorage
-import net.ninjacat.transakt.storage.TransactionLog
+import net.ninjacat.transakt.Result
+import net.ninjacat.transakt.Transaction
+import net.ninjacat.transakt.TxnStage
 import org.hamcrest.Matchers.*
 import org.junit.After
 import org.junit.Assert.assertThat
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
-import java.io.FileOutputStream
-import java.nio.file.Files
-import java.nio.file.Path
+import org.junit.runner.RunWith
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.junit4.SpringRunner
 import java.util.*
+import javax.transaction.Transactional
 
-class TransactionFileTest {
+@RunWith(SpringRunner::class)
+@SpringBootTest(classes = [TestSpringConfig::class])
+@Transactional
+class SpringJpaRepositoryStorageTest {
 
-    private lateinit var txnDir: Path
-    private lateinit var storage: FileTransactionStorage
+    @Autowired
+    private lateinit var repo: TransactionJournalStorage
+    @Autowired
+    private lateinit var storage: SpringJpaRepositoryStorage
 
     @Before
     fun setUp() {
-        txnDir = Files.createTempDirectory("txn-test")
-        storage = FileTransactionStorage.build {
-            storageDir = txnDir
-        }
     }
 
     @After
     fun tearDown() {
-        Files.walk(txnDir)
-                .sorted(Comparator.reverseOrder())
-                .map(Path::toFile)
-                .forEach { file -> file.delete() }
     }
 
     @Test
@@ -96,11 +96,8 @@ class TransactionFileTest {
     @Test
     fun whenThereArePendingTransactions_thenRollThemBack() {
         val txnId = UUID.randomUUID()
-        javaClass.getResourceAsStream("/txn.txt").use { src ->
-            FileOutputStream(txnDir.resolve(txnId.toString()).toFile()).use { dst ->
-                src.copyTo(dst)
-            }
-        }
+        repo.storeStage(StoredStage(txnId, 1, TxnStageProgress.PostStage, Add1(0)))
+        repo.storeStage(StoredStage(txnId, 2, TxnStageProgress.PostStage, Add2(1)))
 
         val manager = Transaction<Throwable, Int>(storage)
         testValue = 3

@@ -28,6 +28,9 @@ interface StageSerializer<T> {
     fun <F, S> deserialize(data: T): TxnStage<F, S>
 }
 
+/**
+ * Enumeration of different times in stage lifecycle.
+ */
 enum class TxnStageProgress {
     PreStage,
     PostStage
@@ -38,7 +41,12 @@ enum class TxnStageProgress {
  */
 interface TransactionStorage {
     /**
-     * Appends transaction stage progress to transaction log
+     * Appends transaction stage progress to transaction log.
+     *
+     * @param index - stage index. This value monotonically increments with each new stage
+     * @param txnId - Id of transaction
+     * @param progress - Current progress of transaction stage. See [TxnStageProgress]
+     * @param stage - the stage itself
      */
     @Throws(TxnStorageException::class)
     fun <F, S> append(index: Int, txnId: UUID, progress: TxnStageProgress, stage: TxnStage<F, S>): StoredStage<F, S>

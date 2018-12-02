@@ -5,7 +5,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 
-class MemTransactionStorage() : TransactionStorage {
+class MemTransactionStorage : TransactionStorage {
     data class TxnKey(val txnId: UUID, val index: Int)
     private val store: ConcurrentMap<TxnKey, List<StageEnvelope<*, *>>> = ConcurrentHashMap()
 

@@ -102,7 +102,7 @@ class FileTransactionStorage(private val storageDir: Path, private val serialize
     /**
      * File-based transaction log appends stage flagged as Removed, instead of modifying whole transaction file
      */
-    override fun <L, R> remove(storedStage: StoredStage<L, R>) {
+    override fun <F, S> remove(storedStage: StoredStage<F, S>) {
         appendTxnState(storedStage.index, storedStage.txnId, StoredStageProgress.Removed, serializer.serialize(storedStage.stage))
     }
 

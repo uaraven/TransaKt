@@ -1,4 +1,4 @@
-rootProject.name = 'transakt'
+rootProject.name = 'net.ninjacat.transakt'
 include 'transakt-core'
 include 'transakt-file-journal'
-include 'transakt-spring-jpa-journal'
+include 'transakt-springboot-jpa-journal'
