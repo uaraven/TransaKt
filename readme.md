@@ -41,7 +41,7 @@ When running in the context of transaction (inside begin block) stages can be ex
 ```kotlin
     val txnLogStorage = FileTxnStorage(Paths.get("/var/txn/")) // file-based transaction log
     // or 
-    // @Autowired val txnLogStorage: SpringJpaRepositoryStorage
+    // @Autowired lateinit val txnLogStorage: SpringJpaRepositoryStorage
     
     val txn = Transaction(txnLogStorage)
     
