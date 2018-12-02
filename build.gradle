@@ -27,7 +27,6 @@ subprojects {
     apply plugin: 'kotlin'
     apply plugin: 'kotlin-allopen'
     apply plugin: "kotlin-noarg"
-    apply plugin: "kotlin-jpa"
     apply plugin: 'net.saliman.cobertura'
     apply plugin: "com.github.kt3k.coveralls"
 

@@ -41,10 +41,10 @@ class JsonSerializer : StageSerializer<String> {
 
 
 @Embeddable
-data class StageIdentity(val index: Int = 0, val txnId: UUID = UUID.randomUUID(), val progress: TxnStageProgress = TxnStageProgress.PreStage) : Serializable
+data class StageIdentity(val index: Int, val txnId: UUID, val progress: TxnStageProgress) : Serializable
 
 @Entity
-data class StageEntity(@EmbeddedId val identity: StageIdentity = StageIdentity(), val stage: String = "") {
+data class StageEntity(@EmbeddedId val identity: StageIdentity, val stage: String) {
 
     fun <F, S> toStoredStage(): StoredStage<F, S> =
             StoredStage(identity.txnId, identity.index, identity.progress, serializer.deserialize(stage))
