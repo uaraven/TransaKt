@@ -15,13 +15,12 @@ class SpringJpaRepositoryStorage @Autowired constructor(private val storage: Tra
         return storedStage
     }
 
-    override fun <F, S> loadStages(txnId: UUID): List<StoredStage<F, S>> {
-        val stages: List<StoredStage<F, S>> = storage.getStages<F, S>(txnId).asSequence().toList()
+    override fun <F, S> loadStages(txnId: UUID): List<StoredStage<F, S>> =
+            storage.getStages<F, S>(txnId)
+                    .asSequence()
+                    .sortedWith(kotlin.Comparator { e1, e2 -> e1.index.compareTo(e2.index) })
+                    .toList()
 
-        return stages.asSequence()
-                .sortedWith(kotlin.Comparator { e1, e2 -> e1.index.compareTo(e2.index) })
-                .toList()
-    }
 
     override fun <L, R> remove(storedStage: StoredStage<L, R>) {
         storage.remove(storedStage)
@@ -31,10 +30,11 @@ class SpringJpaRepositoryStorage @Autowired constructor(private val storage: Tra
         storage.deleteAllForTransaction(txnId)
     }
 
-    override fun <L, R> listAllStoredTransactions(): List<TransactionLog<L, R>> {
-        return storage.listTransactionIds()
+    override fun <F, S> listAllStoredTransactions(): List<TransactionLog<F, S>> {
+        return storage.listTransactions<F, S>()
                 .asSequence()
-                .map { txnId -> TransactionLog(txnId, loadStages<L, R>(txnId)) }
+                .groupBy({ it.txnId }, { it })
+                .map { entry -> TransactionLog(entry.key, entry.value) }
                 .toList()
     }
 }

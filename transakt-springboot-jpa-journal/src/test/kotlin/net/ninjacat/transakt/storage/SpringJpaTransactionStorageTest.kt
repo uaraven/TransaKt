@@ -19,7 +19,7 @@ import javax.transaction.Transactional
 @RunWith(SpringRunner::class)
 @SpringBootTest(classes = [TestSpringConfig::class])
 @Transactional
-class SpringJpaRepositoryStorageTest {
+class SpringJpaTransactionStorageTest {
 
     @Autowired
     private lateinit var repo: TransactionJournalStorage

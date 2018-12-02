@@ -67,10 +67,9 @@ interface StageRepository : CrudRepository<StageEntity, StageIdentity> {
 
 @Component
 open class TransactionJournalStorage @Autowired constructor(private val stageRepository: StageRepository) {
-    fun listTransactionIds(): Stream<UUID> = stageRepository
+    fun <F, S> listTransactions(): Stream<StoredStage<F, S>> = stageRepository
             .findAll()
-            .map { it -> it.identity.txnId }
-            .toSet()
+            .map { it.toStoredStage<F, S>() }
             .stream()
 
     fun <F, S> storeStage(stage: StoredStage<F, S>) {
