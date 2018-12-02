@@ -19,7 +19,9 @@ Firstly, set up transaction log storage. TransaKt comes with memory-based, file-
 built in. 
 
 In-memory storage is only intended for usage with unit-tests.
-Spring-based uses spring-data CrudRepository to store transaction journal in database. See unit tests for more details.
+Spring-based storage uses spring-data CrudRepository to store transaction journal in database. 
+
+See unit tests for more details.
 
 Then, create a new transaction and begin it with `begin` method.  
 
